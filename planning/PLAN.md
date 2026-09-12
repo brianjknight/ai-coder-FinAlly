@@ -36,7 +36,7 @@ The user runs a single Docker command (or a provided start script). A browser op
 - **Price flash animations**: brief green/red background highlight on price change, fading over ~500ms via CSS transitions
 - **Connection status indicator**: a small colored dot (green = connected, yellow = reconnecting, red = disconnected) visible in the header
 - **Professional, data-dense layout**: inspired by Bloomberg/trading terminals — every pixel earns its place
-- **Responsive but desktop-first**: optimized for wide screens, functional on tablet
+- **Responsive but desktop-first**: optimized for wide screens (1280px+); below ~1024px, show a simple "best viewed on a larger screen" notice rather than building a dedicated tablet layout — keeps layout work light for the MVP
 
 ### Color Scheme
 - Accent Yellow: `#ecad0a`
@@ -193,7 +193,7 @@ The backend checks for the SQLite database on startup (or first request). If the
 
 ### Schema
 
-All tables include a `user_id` column defaulting to `"default"`. This is hardcoded for now (single-user) but enables future multi-user support without schema migration.
+No `user_id` column for now — there's no auth and every table implicitly belongs to the single local user. `users_profile.id` stays hardcoded to `"default"` as the one exception, since it needs a primary key. If multi-user support is ever needed, adding a `user_id` column is a one-line `ALTER TABLE` migration per table at that time — not worth the extra column and compound uniqueness constraints today.
 
 **users_profile** — User state (cash balance)
 - `id` TEXT PRIMARY KEY (default: `"default"`)
@@ -202,23 +202,18 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 
 **watchlist** — Tickers the user is watching
 - `id` TEXT PRIMARY KEY (UUID)
-- `user_id` TEXT (default: `"default"`)
-- `ticker` TEXT
+- `ticker` TEXT UNIQUE
 - `added_at` TEXT (ISO timestamp)
-- UNIQUE constraint on `(user_id, ticker)`
 
-**positions** — Current holdings (one row per ticker per user)
+**positions** — Current holdings (one row per ticker)
 - `id` TEXT PRIMARY KEY (UUID)
-- `user_id` TEXT (default: `"default"`)
-- `ticker` TEXT
+- `ticker` TEXT UNIQUE
 - `quantity` REAL (fractional shares supported)
 - `avg_cost` REAL
 - `updated_at` TEXT (ISO timestamp)
-- UNIQUE constraint on `(user_id, ticker)`
 
 **trades** — Trade history (append-only log)
 - `id` TEXT PRIMARY KEY (UUID)
-- `user_id` TEXT (default: `"default"`)
 - `ticker` TEXT
 - `side` TEXT (`"buy"` or `"sell"`)
 - `quantity` REAL (fractional shares supported)
@@ -227,17 +222,19 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 
 **portfolio_snapshots** — Portfolio value over time (for P&L chart). Recorded every 30 seconds by a background task, and immediately after each trade execution.
 - `id` TEXT PRIMARY KEY (UUID)
-- `user_id` TEXT (default: `"default"`)
 - `total_value` REAL
 - `recorded_at` TEXT (ISO timestamp)
 
 **chat_messages** — Conversation history with LLM
 - `id` TEXT PRIMARY KEY (UUID)
-- `user_id` TEXT (default: `"default"`)
 - `role` TEXT (`"user"` or `"assistant"`)
 - `content` TEXT
 - `actions` TEXT (JSON — trades executed, watchlist changes made; null for user messages)
 - `created_at` TEXT (ISO timestamp)
+
+### Money Representation
+
+`cash_balance`, `avg_cost`, `price`, and `total_value` are stored as `REAL` and rounded to 2 decimal places at write time (after every trade and snapshot). Plain floats with consistent rounding are simpler than integer-cents accounting and are precise enough for simulated money — no dedicated money type needed.
 
 ### Default Seed Data
 
@@ -263,13 +260,14 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 ### Watchlist
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/watchlist` | Current watchlist tickers with latest prices |
+| GET | `/api/watchlist` | Current watchlist tickers (prices come from the SSE stream, not this endpoint — used only to seed the list before the stream fills in) |
 | POST | `/api/watchlist` | Add a ticker: `{ticker}` |
 | DELETE | `/api/watchlist/{ticker}` | Remove a ticker |
 
 ### Chat
 | Method | Path | Description |
 |--------|------|-------------|
+| GET | `/api/chat` | Recent chat message history (hydrates the chat panel on page load) |
 | POST | `/api/chat` | Send a message, receive complete JSON response (message + executed actions) |
 
 ### System
@@ -281,7 +279,7 @@ All tables include a `user_id` column defaulting to `"default"`. This is hardcod
 
 ## 9. LLM Integration
 
-When writing code to make calls to LLMs, use cerebras-inference skill to use LiteLLM via OpenRouter to the `openrouter/openai/gpt-oss-120b` model with Cerebras as the inference provider. Structured Outputs should be used to interpret the results.
+When writing code to make calls to LLMs, use the `cerebras` skill to use LiteLLM via OpenRouter to the `openrouter/openai/gpt-oss-120b` model with Cerebras as the inference provider. Structured Outputs should be used to interpret the results.
 
 There is an OPENROUTER_API_KEY in the .env file in the project root.
 
@@ -290,9 +288,9 @@ There is an OPENROUTER_API_KEY in the .env file in the project root.
 When the user sends a chat message, the backend:
 
 1. Loads the user's current portfolio context (cash, positions with P&L, watchlist with live prices, total portfolio value)
-2. Loads recent conversation history from the `chat_messages` table
+2. Loads recent conversation history from the `chat_messages` table (last 10 messages — 5 exchanges; a fixed count, no token budgeting needed)
 3. Constructs a prompt with a system message, portfolio context, conversation history, and the user's new message
-4. Calls the LLM via LiteLLM → OpenRouter, requesting structured output, using the cerebras-inference skill
+4. Calls the LLM via LiteLLM → OpenRouter, requesting structured output, using the `cerebras` skill
 5. Parses the complete structured JSON response
 6. Auto-executes any trades or watchlist changes specified in the response
 7. Stores the message and executed actions in `chat_messages`
@@ -325,7 +323,7 @@ Trades specified by the LLM execute automatically — no confirmation dialog. Th
 - It creates an impressive, fluid demo experience
 - It demonstrates agentic AI capabilities — the core theme of the course
 
-If a trade fails validation (e.g., insufficient cash), the error is included in the chat response so the LLM can inform the user.
+There is a single LLM call per chat turn, not two — `message` and `trades` are generated together, and trade execution/validation happens afterward. The LLM therefore can't know at generation time whether a trade will succeed, so the system prompt instructs it to phrase trade mentions as intent ("I'll buy 10 AAPL...") rather than asserting a guaranteed outcome. If a trade fails validation (e.g., insufficient cash), the failure is recorded in `actions` and rendered as a plain inline error next to the assistant's message — a UI-level correction, not a rewritten LLM response. This keeps the flow to one LLM call, which matters for latency and simplicity.
 
 ### System Prompt Guidance
 
@@ -353,7 +351,7 @@ When `LLM_MOCK=true`, the backend returns deterministic mock responses instead o
 The frontend is a single-page application with a dense, terminal-inspired layout. The specific component architecture and layout system is up to the Frontend Engineer, but the UI should include these elements:
 
 - **Watchlist panel** — grid/table of watched tickers with: ticker symbol, current price (flashing green/red on change), daily change %, and a sparkline mini-chart (accumulated from SSE since page load)
-- **Main chart area** — larger chart for the currently selected ticker, with at minimum price over time. Clicking a ticker in the watchlist selects it here.
+- **Main chart area** — larger chart for the currently selected ticker, with at minimum price over time. Clicking a ticker in the watchlist selects it here. Like the sparklines, there's no server-side price-history table — the chart builds progressively from the SSE stream from the moment a ticker is first watched, regardless of market data source (simulator or Massive). A freshly selected ticker starts with a near-empty chart that fills in over the session; this is expected, not a bug.
 - **Portfolio heatmap** — treemap visualization where each rectangle is a position, sized by portfolio weight, colored by P&L (green = profit, red = loss)
 - **P&L chart** — line chart showing total portfolio value over time, using data from `portfolio_snapshots`
 - **Positions table** — tabular view of all positions: ticker, quantity, avg cost, current price, unrealized P&L, % change
@@ -393,10 +391,14 @@ FastAPI serves the static frontend files and all API routes on port 8000.
 
 ### Docker Volume
 
-The SQLite database persists via a named Docker volume:
+The SQLite database persists via a bind mount of the local `db/` directory (not a named volume) — students can see, back up, or delete `db/finally.db` directly without any Docker volume commands:
 
 ```bash
-docker run -v finally-data:/app/db -p 8000:8000 --env-file .env finally
+# macOS/Linux
+docker run -v "$(pwd)/db:/app/db" -p 8000:8000 --env-file .env finally
+
+# Windows PowerShell
+docker run -v "${PWD}/db:/app/db" -p 8000:8000 --env-file .env finally
 ```
 
 The `db/` directory in the project root maps to `/app/db` in the container. The backend writes `finally.db` to this path.
@@ -453,4 +455,22 @@ The container is designed to deploy to AWS App Runner, Render, or any container 
 - Sell shares: cash increases, position updates or disappears
 - Portfolio visualization: heatmap renders with correct colors, P&L chart has data points
 - AI chat (mocked): send a message, receive a response, trade execution appears inline
-- SSE resilience: disconnect and verify reconnection
+- SSE resilience: disconnect and verify reconnection — simulated with Playwright's `page.route()` to abort the `/api/stream/prices` request, then restore it; no backend test-only endpoint needed, since `EventSource`'s built-in retry handles the rest
+
+---
+
+## 13. Open Questions, Clarifications & Simplification Opportunities — Resolved
+
+*Originally added via doc-review; each item below was resolved in favor of the simplest, lightest-weight option and the fix applied directly to the relevant section. Kept here as a decision log.*
+
+1. **Docker volume type mismatch** → Resolved in §11: switched to a bind mount of local `db/` (`-v "$(pwd)/db:/app/db"`), matching §4's description and making the DB file directly visible/removable by students without Docker volume commands.
+2. **Skill name mismatch** → Resolved in §9: `cerebras-inference` corrected to `cerebras` (the actual skill name), both occurrences.
+3. **Chat auto-execution ordering** → Resolved in §9 (Auto-Execution): confirmed a single LLM call per turn (no second call for a "final" message). The LLM phrases trade mentions as intent, not guaranteed outcome; failed trades render as a separate inline UI error next to the assistant's message rather than being woven back into LLM prose. Keeps latency and architecture simple.
+4. **No endpoint to load chat history** → Resolved in §8: added `GET /api/chat`, following the same hydrate-on-load pattern as portfolio/watchlist.
+5. **Main chart's historical data source** → Resolved in §10: explicitly no server-side price-history table; the main chart accumulates from the SSE stream since first watched, same as sparklines, regardless of market data source.
+6. **SSE-resilience E2E test feasibility** → Resolved in §12: mechanism specified as Playwright `page.route()` aborting/restoring the `/api/stream/prices` request — no backend test-only endpoint needed.
+7. **`user_id` on every table** → Resolved in §7: dropped entirely from the MVP schema (only `users_profile.id` stays hardcoded to `"default"` as the primary key). Deferred to a future one-line migration if multi-user is ever needed — avoids carrying unused columns and compound uniqueness constraints today.
+8. **Money as `REAL`** → Resolved in §7 (Money Representation): kept as `REAL` (integer cents was overkill for simulated money) with a stated convention — round to 2 decimals at write time — to stop float drift from compounding.
+9. **`GET /api/watchlist` duplicates SSE data** → Resolved in §8: endpoint now returns tickers only; all prices come from SSE.
+10. **Chat history window** → Resolved in §9 step 2: fixed at last 10 messages (5 exchanges), no token-budget logic needed.
+11. **Tablet breakpoint** → Resolved in §10 (Visual Design): dropped the dedicated-tablet-layout requirement; below ~1024px shows a "best viewed on a larger screen" notice instead, keeping responsive work out of MVP scope.
