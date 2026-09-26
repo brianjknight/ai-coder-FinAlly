@@ -1,0 +1,49 @@
+# VCS / editor
+.git
+.github
+.gitignore
+.claude
+.vscode
+.idea
+
+# Secrets - passed at runtime via --env-file
+.env
+.env.*
+!.env.example
+
+# Frontend build artifacts / deps
+**/node_modules
+frontend/.next
+frontend/out
+frontend/coverage
+
+# Python artifacts
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+**/.coverage
+**/htmlcov
+backend/static
+
+# Runtime database
+db/*.db
+db/*.db-*
+**/*.db
+**/*.sqlite3
+
+# Tests / E2E artifacts
+test
+**/test-results
+**/playwright-report
+
+# Docs
+planning
+*.md
+!backend/README.md
+
+# Misc
+**/.DS_Store
+**/*.log

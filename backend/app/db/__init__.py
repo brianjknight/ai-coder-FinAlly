@@ -1,0 +1,51 @@
+"""FinAlly persistence layer (SQLite). See planning/TEAM_CONTRACTS.md "DB module API"."""
+
+from .connection import (
+    DEFAULT_CASH_BALANCE,
+    DEFAULT_USER_ID,
+    DEFAULT_WATCHLIST,
+    get_connection,
+    get_db_path,
+    init_db,
+)
+from .repository import (
+    add_chat_message,
+    add_watchlist_ticker,
+    execute_trade_atomic,
+    get_cash_balance,
+    get_chat_history,
+    get_position,
+    get_positions,
+    get_snapshots,
+    get_trades,
+    get_watchlist,
+    record_snapshot,
+    record_trade,
+    remove_watchlist_ticker,
+    set_cash_balance,
+    upsert_position,
+)
+
+__all__ = [
+    "DEFAULT_CASH_BALANCE",
+    "DEFAULT_USER_ID",
+    "DEFAULT_WATCHLIST",
+    "add_chat_message",
+    "add_watchlist_ticker",
+    "execute_trade_atomic",
+    "get_cash_balance",
+    "get_chat_history",
+    "get_connection",
+    "get_db_path",
+    "get_position",
+    "get_positions",
+    "get_snapshots",
+    "get_trades",
+    "get_watchlist",
+    "init_db",
+    "record_snapshot",
+    "record_trade",
+    "remove_watchlist_ticker",
+    "set_cash_balance",
+    "upsert_position",
+]

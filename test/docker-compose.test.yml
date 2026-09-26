@@ -1,0 +1,64 @@
+# E2E test stack: the FinAlly app (mock LLM, fresh DB) + a Playwright runner.
+#
+#   cd test
+#   docker compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from playwright
+#   docker compose -f docker-compose.test.yml down -v
+#
+name: finally-e2e
+
+# NOTE: the app service must NOT be named "app" -- .app is an HSTS-preloaded TLD, so
+# Chromium would force https://app:8000 and fail with ERR_SSL_PROTOCOL_ERROR.
+services:
+  finally:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    environment:
+      LLM_MOCK: "true"
+      MASSIVE_API_KEY: ""
+      OPENROUTER_API_KEY: "not-needed-in-mock-mode"
+      DB_PATH: /app/db/finally.db
+    # Fresh, throwaway database on every run (no persistent volume).
+    tmpfs:
+      - /app/db
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health', timeout=4).status == 200 else 1)"
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.63.0-noble
+    working_dir: /tests
+    environment:
+      BASE_URL: http://finally:8000
+      FRESH_DB: "1"
+      CI: "1"
+    volumes:
+      - ./:/tests
+    ipc: host
+    depends_on:
+      finally:
+        condition: service_healthy
+    # Work on a copy so the container's Linux node_modules never touch the host's;
+    # copy the report/results back to test/ afterwards.
+    command:
+      - bash
+      - -c
+      - |
+        set -u
+        rm -rf /work && mkdir /work
+        cp package.json package-lock.json playwright.config.ts tsconfig.json /work/
+        cp -r e2e /work/
+        cd /work
+        npm ci --no-audit --no-fund || exit 1
+        npx playwright test
+        rc=$$?
+        rm -rf /tests/playwright-report /tests/test-results
+        cp -r playwright-report test-results /tests/ 2>/dev/null || true
+        exit $$rc

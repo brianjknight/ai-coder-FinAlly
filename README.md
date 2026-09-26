@@ -25,16 +25,37 @@ Single Docker container serving everything on port 8000:
 
 ## Quick Start
 
+Requires Docker. First configure your environment:
+
 ```bash
-# Clone and configure
 cp .env.example .env
-# Add your OPENROUTER_API_KEY to .env
+# Add your OPENROUTER_API_KEY to .env (or set LLM_MOCK=true to run without one)
+```
 
-# Run with Docker
+Then start the app with the script for your platform (builds the image on first run):
+
+```bash
+# macOS / Linux
+./scripts/start_mac.sh            # add --build to force a rebuild, --no-open to skip the browser
+./scripts/stop_mac.sh
+```
+
+```powershell
+# Windows PowerShell
+.\scripts\start_windows.ps1       # add -Build to force a rebuild, -NoOpen to skip the browser
+.\scripts\stop_windows.ps1
+```
+
+Open http://localhost:8000. Stopping removes the container but keeps the `finally-data`
+volume, so your portfolio persists across restarts (`docker volume rm finally-data` to reset).
+
+Alternatively, run Docker directly or via Compose:
+
+```bash
 docker build -t finally .
-docker run -v finally-data:/app/db -p 8000:8000 --env-file .env finally
-
-# Open http://localhost:8000
+docker run -d --name finally -v finally-data:/app/db -p 8000:8000 --env-file .env finally
+# or
+docker compose up -d --build
 ```
 
 ## Environment Variables
