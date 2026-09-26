@@ -15,6 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+!frontend/src/lib/
 lib64/
 parts/
 sdist/
@@ -60,6 +61,11 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+
+# FinAlly SQLite database
+db/finally.db
+*.db-wal
+*.db-shm
 
 # Flask stuff:
 instance/
@@ -206,6 +212,7 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+<<<<<<< HEAD
 # ---------------- FinAlly ----------------
 # Runtime SQLite database (volume mount target; keep the directory)
 db/*.db
@@ -233,3 +240,7 @@ blob-report/
 
 # Playwright MCP browser artifacts
 .playwright-mcp/
+=======
+
+node_modules/*
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # E2E test stack: the FinAlly app (mock LLM, fresh DB) + a Playwright runner.
 #
 #   cd test
@@ -62,3 +63,32 @@ services:
         rm -rf /tests/playwright-report /tests/test-results
         cp -r playwright-report test-results /tests/ 2>/dev/null || true
         exit $$rc
+=======
+services:
+  app:
+    build:
+      context: ..
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_MOCK=true
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  tests:
+    image: mcr.microsoft.com/playwright:v1.58.2-noble
+    depends_on:
+      app:
+        condition: service_healthy
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - BASE_URL=http://app:8000
+    command: npx playwright test
+    ipc: host
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde

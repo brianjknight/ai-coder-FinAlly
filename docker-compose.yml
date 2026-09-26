@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Optional convenience wrapper. Equivalent to:
 #   docker run -d --name finally -v finally-data:/app/db -p 8000:8000 --env-file .env finally
 # Usage: docker compose up -d --build   /   docker compose down   (volume is kept)
@@ -17,3 +18,23 @@ services:
 volumes:
   finally-data:
     name: finally-data
+=======
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - finally-data:/app/db
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  finally-data:
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde

@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+<<<<<<< HEAD
   --color-ink: #0d1117;
   --color-panel: #121821;
   --color-raised: #18202b;
@@ -107,4 +108,37 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+=======
+  --color-terminal-bg: #0d1117;
+  --color-terminal-surface: #1a1a2e;
+  --color-terminal-border: #2d2d44;
+
+  --color-accent-yellow: #ecad0a;
+  --color-brand-blue: #209dd7;
+  --color-brand-purple: #753991;
+
+  --color-price-up: #22c55e;
+  --color-price-down: #ef4444;
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-muted: #484f58;
+
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Inter", ui-sans-serif, sans-serif;
+}
+
+@keyframes flash-up {
+  0% { background-color: rgba(34, 197, 94, 0.3); }
+  100% { background-color: transparent; }
+}
+@keyframes flash-down {
+  0% { background-color: rgba(239, 68, 68, 0.3); }
+  100% { background-color: transparent; }
+}
+.animate-flash-up {
+  animation: flash-up 500ms ease-out;
+}
+.animate-flash-down {
+  animation: flash-down 500ms ease-out;
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
 }

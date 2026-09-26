@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import type { Metadata, Viewport } from "next";
 import "@fontsource/ibm-plex-sans-condensed/400.css";
 import "@fontsource/ibm-plex-sans-condensed/500.css";
@@ -21,6 +22,39 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>{children}</body>
+=======
+import type { Metadata } from "next";
+import { Inter, JetBrains_Mono } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "FinAlly - AI Trading Workstation",
+  description: "AI-powered trading workstation with live market data",
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en">
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} bg-terminal-bg text-text-primary font-sans antialiased`}
+      >
+        {children}
+      </body>
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
     </html>
   );
 }

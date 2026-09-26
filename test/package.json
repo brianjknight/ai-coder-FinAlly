@@ -1,5 +1,6 @@
 {
   "name": "finally-e2e",
+<<<<<<< HEAD
   "version": "1.0.0",
   "private": true,
   "description": "Playwright E2E tests for FinAlly",
@@ -12,5 +13,14 @@
     "@playwright/test": "1.63.0",
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
+=======
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.58.2"
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
   }
 }

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # VCS / editor
 .git
 .github
@@ -47,3 +48,26 @@ planning
 # Misc
 **/.DS_Store
 **/*.log
+=======
+.git
+.env
+.planning
+.claude
+node_modules
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+db/finally.db
+*.db-wal
+*.db-shm
+frontend/out
+frontend/node_modules
+frontend/.next
+backend/.venv
+test/node_modules
+*.md
+!backend/README.md
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde

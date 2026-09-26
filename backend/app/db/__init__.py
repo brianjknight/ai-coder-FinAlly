@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """FinAlly persistence layer (SQLite). See planning/TEAM_CONTRACTS.md "DB module API"."""
 
 from .connection import (
@@ -49,3 +50,15 @@ __all__ = [
     "set_cash_balance",
     "upsert_position",
 ]
+=======
+"""Database layer for FinAlly.
+
+Public API:
+    init_db   - Initialize database with schema and seed data
+    close_db  - Close the database connection
+"""
+
+from .connection import close_db, init_db
+
+__all__ = ["init_db", "close_db"]
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde

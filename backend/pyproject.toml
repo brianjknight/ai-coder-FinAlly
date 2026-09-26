@@ -10,13 +10,22 @@ dependencies = [
     "numpy>=2.0.0",
     "massive>=1.0.0",
     "rich>=13.0.0",
+<<<<<<< HEAD
     "python-dotenv>=1.2.1",
     "litellm>=1.102.1",
     "pydantic>=2.12.5",
+=======
+    "aiosqlite>=0.22.1",
+    "litellm>=1.81.10",
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
 ]
 
 [project.optional-dependencies]
 dev = [
+<<<<<<< HEAD
+=======
+    "asgi-lifespan>=2.1.0",
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
     "httpx>=0.28.1",
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",

@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+<<<<<<< HEAD
     "module": "commonjs",
     "moduleResolution": "node",
     "strict": true,
@@ -10,4 +11,13 @@
     "types": ["node"]
   },
   "include": ["playwright.config.ts", "e2e/**/*.ts"]
+=======
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": ["tests/**/*.ts", "playwright.config.ts"]
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
 }

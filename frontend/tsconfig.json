@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+<<<<<<< HEAD
     "target": "ES2020",
     "lib": [
       "dom",
@@ -7,6 +8,11 @@
       "esnext"
     ],
     "allowJs": false,
+=======
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
@@ -17,19 +23,26 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
+<<<<<<< HEAD
     "types": [
       "vitest/globals",
       "@testing-library/jest-dom"
     ],
+=======
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
     "plugins": [
       {
         "name": "next"
       }
     ],
     "paths": {
+<<<<<<< HEAD
       "@/*": [
         "./src/*"
       ]
+=======
+      "@/*": ["./src/*"]
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
     }
   },
   "include": [
@@ -37,10 +50,17 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
+<<<<<<< HEAD
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "out"
   ]
+=======
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
 }

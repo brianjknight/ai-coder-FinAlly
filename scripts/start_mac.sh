@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+<<<<<<< HEAD
 # Start the FinAlly container (macOS/Linux). Idempotent.
 # Usage: scripts/start_mac.sh [--build] [--no-open]
 set -euo pipefail
@@ -74,3 +75,30 @@ if [ "$OPEN" -eq 1 ]; then
     xdg-open "$URL" >/dev/null 2>&1 || true
   fi
 fi
+=======
+set -euo pipefail
+
+CONTAINER_NAME="finally-gsd"
+IMAGE_NAME="finally-gsd"
+
+# Stop existing container if running
+docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+# Build if --build flag passed or image doesn't exist
+if [[ "${1:-}" == "--build" ]] || ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
+    echo "Building FinAlly Docker image..."
+    docker build -t "$IMAGE_NAME" .
+fi
+
+# Run container
+docker run -d \
+    --name "$CONTAINER_NAME" \
+    -p 8000:8000 \
+    -v finally-data-gsd:/app/db \
+    --env-file .env \
+    "$IMAGE_NAME"
+
+echo ""
+echo "FinAlly is running at http://localhost:8008"
+echo "Stop with: ./scripts/stop_mac.sh"
+>>>>>>> 4e94a35bae4b2c154c3398af2e05b336f98fdbde
